@@ -11,6 +11,6 @@ const getFixturePath = (filename) => path.join(__dirname, '..', '__fixtures__', 
 describe('check diff', () => {
   test('genDiff', () => {
     const actual = genDiff(getFixturePath('file1.json'), getFixturePath('file2.json'));
-    expect((actual)).toBe(actual);
+    expect(actual).toBe(actual);
   });
 });
