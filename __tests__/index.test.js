@@ -9,18 +9,23 @@ const __dirname = dirname(__filename);
 
 const getFixturePath = (filename) => path.join(__dirname, '..', '__fixtures__', filename);
 const readFile = (filename) => fs.readFileSync(getFixturePath(filename), 'utf-8');
-const expectedfile = readFile('file.txt');
 
-describe('check json', () => {
-  test('genDiff', () => {
-    const actual = genDiff(getFixturePath('file1.json'), getFixturePath('file2.json'));
-    expect(actual).toBe(expectedfile);
+const expectedStylish = readFile('stylish.txt');
+
+describe('genDiff test', () => {
+  test('should be work with yml', () => {
+    const filePath1 = getFixturePath('file1.yml');
+    const filePath2 = getFixturePath('file2.yml');
+
+    expect(genDiff(filePath1, filePath2)).toEqual(expectedStylish);
+    expect(genDiff(filePath1, filePath2, 'stylish')).toEqual(expectedStylish);
   });
-});
 
-describe('check yml', () => {
-  test('genDiff', () => {
-    const actual = genDiff(getFixturePath('file1.yml'), getFixturePath('file2.yml'));
-    expect(actual).toBe(expectedfile);
+  test('should be work with json', () => {
+    const filePath1 = getFixturePath('file1.json');
+    const filePath2 = getFixturePath('file2.json');
+
+    expect(genDiff(filePath1, filePath2)).toEqual(expectedStylish);
+    expect(genDiff(filePath1, filePath2, 'stylish')).toEqual(expectedStylish);
   });
 });
