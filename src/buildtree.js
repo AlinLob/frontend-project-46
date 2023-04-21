@@ -28,7 +28,4 @@ const buildTree = (file1, file2) => {
   return diff;
 };
 
-export default (file1, file2) => ({
-  type: 'root',
-  children: buildTree(file1, file2),
-});
+export default buildTree;
