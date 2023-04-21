@@ -1,43 +1,37 @@
 import _ from 'lodash';
 
-const indent = (depth, spaceCount = 4) => ' '.repeat(depth * spaceCount - 2);
+const indent = (depth, str = ' ', spacesCount = 4) => str.repeat((depth * spacesCount) - 2);
 
-const stringify = (data, depth, mapping) => {
-  if (!_.isPlainObject(data)) {
-    return String(data);
+const stringify = (data, depth = 1) => {
+  if (!_.isObject(data)) {
+    return data;
   }
-
-  const output = Object.entries(data)
-    .map(([key, value]) => mapping.unchanged({ key, value }, depth + 1));
-
-  return `{\n${output.join('\n')}\n${indent(depth)}  }`;
+  const entries = Object.entries(data);
+  const result = entries.map(([key, value]) => `${indent(depth + 1)}  ${key}: ${stringify(value, depth + 1)}`);
+  return `{\n${result.join('\n')}\n  ${indent(depth)}}`;
 };
 
-const mapping = {
-  root: ({ children }, depth, iter) => {
-    const output = children.flatMap((node) => mapping[node.type](node, depth + 1, iter));
-    return `{\n${output.join('\n')}\n}`;
-  },
-  nested: ({ key, children }, depth, iter) => {
-    const output = children.flatMap((node) => mapping[node.type](node, depth + 1, iter));
-    return `${indent(depth)}  ${key}: {\n${output.join('\n')}\n${indent(depth)}  }`;
-  },
-  added: (node, depth) => `${indent(depth)}+ ${node.key}: ${stringify(node.value, depth, mapping)}`,
-  deleted: (node, depth) => `${indent(depth)}- ${node.key}: ${stringify(node.value, depth, mapping)}`,
-  unchanged: (node, depth) => `${indent(depth)}  ${node.key}: ${stringify(node.value, depth, mapping)}`,
-  changed: (node, depth) => {
-    const { key, value1, value2 } = node;
-
-    const data1 = `${indent(depth)}- ${key}: ${stringify(value1, depth, mapping)}`;
-    const data2 = `${indent(depth)}+ ${key}: ${stringify(value2, depth, mapping)}`;
-
-    return [data1, data2];
-  },
+const stylish = (data) => {
+  const iter = (node, depth = 1) => {
+    const result = node.map((item) => {
+      switch (item.type) {
+        case 'nested': {
+          return `${indent(depth)}  ${item.key}: {\n${iter(item.children, depth + 1)}\n${indent(depth)}  }`;
+        }
+        case 'deleted':
+          return `${indent(depth)}- ${item.key}: ${stringify(item.value, depth)}`;
+        case 'added':
+          return `${indent(depth)}+ ${item.key}: ${stringify(item.value, depth)}`;
+        case 'changed':
+          return (`${indent(depth)}- ${item.key}: ${stringify(item.value1, depth)}\n${indent(depth)}+ ${item.key}: ${stringify(item.value2, depth)}`);
+        case 'unchanged':
+          return `${indent(depth)}  ${item.key}: ${stringify(item.value, depth)}`;
+        default:
+          throw new Error(`Unknown type ${item.type}`);
+      }
+    });
+    return result.join('\n');
+  };
+  return `{\n${iter(data)}\n}`;
 };
-
-const renderTree = (ast) => {
-  const iter = (node, depth) => mapping[node.type](node, depth, iter);
-  return iter(ast, 0);
-};
-
-export default renderTree;
+export default stylish;
